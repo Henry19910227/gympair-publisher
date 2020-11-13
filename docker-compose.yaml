@@ -1,0 +1,45 @@
+version: "2.4"
+services:
+    gympair-user-service:
+        image: toyokoyo199/gympair-user-service:1.0
+        container_name: gympair-user-service
+        ports:
+            - "9090:9090"
+        networks:
+            - gympair-network
+    gympair-user-mysql:
+        image: mysql
+        container_name: gympair-user-mysql
+        volumes:
+            - "./gympair-user-mysql-volumes/initdb:/docker-entrypoint-initdb.d"
+        ports:
+            - "3306:3306"
+        networks:
+            - gympair-network
+        environment:
+            - MYSQL_DATABASE=ichat
+            - MYSQL_ROOT_PASSWORD=123456
+            - MYSQL_USER=henry
+            - MYSQL_PASSWORD=123456
+    gympair-chat-engine:
+        image: centrifugo/centrifugo
+        container_name: gympair-chat-engine
+        volumes:
+            - "./gympair-chat-engine-volumes:/centrifugo"
+        ports:
+            - "8000:8000"
+        networks:
+            - gympair-network
+        ulimits:
+            nofile:
+               soft: 65536
+               hard: 65536
+        command: centrifugo --config=config.json --admin --admin_insecure
+    gympair-chat-redis:
+        image: redis
+        networks:
+            - gympair-network
+        container_name: gympair-chat-redis
+networks:
+    gympair-network:
+        driver: bridge
